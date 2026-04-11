@@ -8,7 +8,7 @@
     <div class="col-md-6">
         <h2 class="mb-4">Редактирование: @{{ user.username }}</h2>
         <div class="card shadow-sm p-4">
-            {{ user_form(user=user, roles=roles, errors=errors, is_edit=True) }}
+            {{ user_form(user=user, roles=roles, errors=errors, is_edit=True, is_admin=is_admin) }}
         </div>
     </div>
 </div>

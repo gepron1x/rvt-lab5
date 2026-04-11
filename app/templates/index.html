@@ -6,7 +6,7 @@
 
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h2>Список пользователей</h2>
-    {% if current_user.is_authenticated %}
+    {% if is_admin %}
         <a href="{{ url_for('users.create_user') }}" class="btn btn-primary">Создать пользователя</a>
     {% endif %}
 </div>
@@ -28,10 +28,11 @@
             <td>{{ user.role.name if user.role else '---' }}</td>
             <td>
                 <div class="btn-group" role="group">
-                    <a href="{{ url_for('users.view_user', user_id=user.id) }}" class="btn btn-sm btn-info text-white">Просмотр</a>
-
-                    {% if current_user.is_authenticated %}
+                    {% if is_admin or current_user.id == user.id %}
+                        <a href="{{ url_for('users.view_user', user_id=user.id) }}" class="btn btn-sm btn-info text-white">Просмотр</a>
                         <a href="{{ url_for('users.edit_user', user_id=user.id) }}" class="btn btn-sm btn-warning">Редактировать</a>
+                    {% endif %}
+                    {% if is_admin %}
                         <button type="button" class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#deleteModal{{ user.id }}">
                             Удалить
                         </button>
@@ -40,7 +41,7 @@
             </td>
         </tr>
 
-        {% if current_user.is_authenticated %}
+        {% if is_admin %}
         <div class="modal fade" id="deleteModal{{ user.id }}" tabindex="-1" aria-labelledby="deleteModalLabel{{ user.id }}" aria-hidden="true">
             <div class="modal-dialog">
                 <div class="modal-content">

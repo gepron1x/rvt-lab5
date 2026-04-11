@@ -4,7 +4,7 @@ from werkzeug.security import generate_password_hash
 
 from ..extensions import db
 from ..models import User, Role
-from ..rights import check_rights
+from ..rights import check_rights, has_access, has_role
 from ..validations import validate_user_data
 users_bp = Blueprint('users', __name__)
 
@@ -41,9 +41,12 @@ def create_user():
     return render_template('create_user.html', roles=roles, errors=errors)
 
 @users_bp.route('/user/<int:user_id>/edit', methods=['GET', 'POST'])
-@check_rights("Администратор")
 def edit_user(user_id: int):
     user = db.get_or_404(User, user_id)
+    if not has_access(user):
+        flash("У вас недостаточно прав для доступа к данной странице.", "danger")
+        return redirect(url_for('main.index'))
+
     roles = db.session.execute(db.select(Role)).scalars().all()
     errors = {}
     if request.method == 'POST':
@@ -67,7 +70,8 @@ def edit_user(user_id: int):
             db.session.commit()
             flash("Пользователь успешно редактирован!", "success")
             return redirect(url_for('main.index'))
-    return render_template('edit_user.html', user=user, roles=roles, errors=errors)
+    return render_template('edit_user.html', user=user, roles=roles, errors=errors,
+                           is_admin=has_role("Администратор"))
 
 
 @users_bp.route('/user/<int:user_id>/delete', methods=['POST'])

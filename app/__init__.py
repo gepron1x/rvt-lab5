@@ -22,9 +22,14 @@ def create_app():
     from .routes.main import main_bp
     from .routes.auth import auth_bp
     from .routes.users import users_bp
+    from .routes.visits import visits_bp
 
     app.register_blueprint(main_bp)
     app.register_blueprint(auth_bp)
     app.register_blueprint(users_bp)
+    app.register_blueprint(visits_bp, prefix="/visits")
+
+    from .routes.visits import log_visit # Before request for visit counts
+    app.before_request(log_visit)
 
     return app
