@@ -1,4 +1,6 @@
 from flask import Blueprint, render_template
+
+from .. import role
 from ..extensions import db
 from ..models import User
 from ..rights import has_role
@@ -9,4 +11,4 @@ main_bp = Blueprint('main', __name__)
 @main_bp.route('/')
 def index():
     users = db.session.execute(db.select(User)).scalars().all()
-    return render_template('index.html', users=users, is_admin=has_role("Администратор"))
+    return render_template('index.html', users=users, is_admin=has_role(role.ADMIN))

@@ -2,9 +2,10 @@ import csv
 from io import StringIO
 
 from flask import request, Blueprint, render_template, abort, make_response
-from flask_login import current_user
+from flask_login import current_user, login_required
 from sqlalchemy import text, func, desc
 
+from .. import role
 from ..models import VisitLog, User
 from ..extensions import db
 from ..rights import has_role, check_rights
@@ -24,16 +25,17 @@ def log_visit():
         db.session.commit()
 
 @visits_bp.route('/visits')
+@login_required
 def visits():
     page = request.args.get('page', 1, type=int)
     stmt = db.select(VisitLog).order_by(VisitLog.created_at.desc())
-    if not has_role("Администратор"):
+    if not has_role(role.ADMIN):
         stmt = stmt.filter_by(user_id=current_user.id)
     pagination = db.paginate(stmt, page=page, per_page=PAGE_SIZE)
     return render_template("visits/visits.html",
                            logs=pagination.items,
                            pagination=pagination,
-                           page=page, is_admin=has_role("Администратор"))
+                           page=page, is_admin=has_role(role.ADMIN))
 
 def make_pages_report():
     stmt = db.select(
@@ -65,7 +67,7 @@ def make_users_report():
     return table
 
 @visits_bp.route('/report/pages')
-@check_rights("Администратор")
+@check_rights(role.ADMIN)
 def report_pages():
     table = make_pages_report()
     return render_template("visits/report.html",
@@ -74,7 +76,7 @@ def report_pages():
                            report_title="Отчёт по страницам", report_type='pages')
 
 @visits_bp.route('/report/users')
-@check_rights("Администратор")
+@check_rights(role.ADMIN)
 def report_users():
     table = make_users_report()
     return render_template("visits/report.html",
@@ -83,7 +85,7 @@ def report_users():
                            report_title="Отчёт по пользователям", report_type='users')
 
 @visits_bp.route('/report/<report_type>/csv')
-@check_rights("Администратор")
+@check_rights(role.ADMIN)
 def export_csv(report_type: str):
     if report_type == 'pages':
         table = make_pages_report()

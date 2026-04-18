@@ -2,6 +2,7 @@ from flask import Blueprint, render_template, request, flash, redirect, url_for
 from flask_login import login_required, current_user
 from werkzeug.security import generate_password_hash
 
+from .. import role
 from ..extensions import db
 from ..models import User, Role
 from ..rights import check_rights, has_access, has_role
@@ -14,7 +15,7 @@ def view_user(user_id):
     return render_template('view_user.html', user=user)
 
 @users_bp.route('/user/create', methods=['GET', 'POST'])
-@check_rights("Администратор")
+@check_rights(role.ADMIN)
 def create_user():
     roles = db.session.execute(db.select(Role)).scalars().all()
     errors = {}
@@ -41,6 +42,7 @@ def create_user():
     return render_template('create_user.html', roles=roles, errors=errors)
 
 @users_bp.route('/user/<int:user_id>/edit', methods=['GET', 'POST'])
+@login_required
 def edit_user(user_id: int):
     user = db.get_or_404(User, user_id)
     if not has_access(user):
@@ -56,9 +58,9 @@ def edit_user(user_id: int):
                 user.first_name = request.form.get('first_name')
                 user.last_name = request.form.get('last_name')
                 user.middle_name = request.form.get('middle_name')
-
-                role_id = request.form.get('role_id')
-                user.role_id = int(role_id) if role_id else None
+                if has_role(role.ADMIN):
+                    role_id = request.form.get('role_id')
+                    user.role_id = int(role_id) if role_id else None
 
                 db.session.commit()
                 flash(f"Данные пользователя {user.username} успешно обновлены!", "success")
@@ -71,11 +73,11 @@ def edit_user(user_id: int):
             flash("Пользователь успешно редактирован!", "success")
             return redirect(url_for('main.index'))
     return render_template('edit_user.html', user=user, roles=roles, errors=errors,
-                           is_admin=has_role("Администратор"))
+                           is_admin=has_role(role.ADMIN))
 
 
 @users_bp.route('/user/<int:user_id>/delete', methods=['POST'])
-@check_rights("Администратор")
+@check_rights(role.ADMIN)
 def delete_user(user_id):
     user = db.get_or_404(User, user_id)
     if user.id == current_user.id:

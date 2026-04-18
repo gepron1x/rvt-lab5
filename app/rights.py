@@ -2,6 +2,8 @@
 from functools import wraps
 from flask import flash, redirect, url_for, request, g
 from flask_login import current_user
+
+from . import role
 from .models import VisitLog, User
 
 
@@ -12,7 +14,7 @@ def has_role(required_role: str) -> bool:
     return required_role == role_name
 
 def has_access(user: User) -> bool:
-    if has_role("Администратор"):
+    if has_role(role.ADMIN):
         return True
     return current_user.id == user.id
 
