@@ -43,7 +43,6 @@
     <div class="mb-3">
         <label for="role_id" class="form-label">Роль</label>
         <select name="role_id" id="role_id" class="form-select" {{ 'disabled' if not is_admin else '' }}>
-            <option value="">Без роли</option>
             {% for role in roles %}
             <option value="{{ role.id }}"
                 {{ 'selected' if (request.form.get('role_id')|int == role.id or (user and user.role_id == role.id)) }}>
